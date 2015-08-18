@@ -30,6 +30,8 @@ import com.example.android.common.logger.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
@@ -388,8 +390,10 @@ public class BluetoothChatService {
 
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
+            /*
             try {
                 if (secure) {
+
                     tmp = device.createRfcommSocketToServiceRecord(
                             MY_UUID_SECURE);
                 } else {
@@ -399,6 +403,19 @@ public class BluetoothChatService {
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
+            */
+            /* multiple device */
+            try {
+                Method m = device.getClass().getMethod("createRfcommSocket", new Class[] {int.class});
+                tmp = (BluetoothSocket) m.invoke(device, 1);
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
             mmSocket = tmp;
         }
 
