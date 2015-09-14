@@ -21,6 +21,10 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -85,6 +89,10 @@ public class BluetoothChatFragment extends Fragment {
      * Member object for the chat services
      */
     private BluetoothChatService mChatService = null;
+
+    /* variable ensure message only print once */
+    private boolean messageSent = true;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -220,6 +228,8 @@ public class BluetoothChatFragment extends Fragment {
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
             mOutEditText.setText(mOutStringBuffer);
+
+            messageSent = false;
         }
     }
 
@@ -296,16 +306,24 @@ public class BluetoothChatFragment extends Fragment {
                     }
                     break;
                 case Constants.MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    mConversationArrayAdapter.add("Me:  " + writeMessage);
+                    if (!messageSent) {
+                        byte[] writeBuf = (byte[]) msg.obj;
+                        // construct a string from the buffer
+                        String writeMessage = new String(writeBuf);
+                        mConversationArrayAdapter.add("ME:  " + writeMessage);
+                        messageSent = true;
+                    }
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                    //playSound((char) readBuf[0]);
+
+                    //playTone((char) readBuf[0]);
+                    //genTone();
+                    //playSound();
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -314,6 +332,9 @@ public class BluetoothChatFragment extends Fragment {
                         Toast.makeText(activity, "Connected to "
                                 + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
                     }
+                    break;
+                case Constants.MESSAGE_CHANGE_DEVICE_NAME:
+                    mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
                     break;
                 case Constants.MESSAGE_TOAST:
                     if (null != activity) {
@@ -324,6 +345,9 @@ public class BluetoothChatFragment extends Fragment {
             }
         }
     };
+
+
+
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -368,6 +392,48 @@ public class BluetoothChatFragment extends Fragment {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
         mChatService.connect(device, secure);
+    }
+
+    private void playSound(char tmptone){
+        int streamType = AudioManager.STREAM_MUSIC;
+        int volume = 50;
+        int durationMs = 200;
+        int toneTypes=0;
+        ToneGenerator toneGenerator =
+                new ToneGenerator(streamType, volume);
+        switch (tmptone) {
+            case 'c':
+                toneTypes = ToneGenerator.TONE_DTMF_C;
+                break;
+            case 'd':
+                toneTypes = ToneGenerator.TONE_DTMF_D;
+                break;
+            case 'e':
+                toneTypes = ToneGenerator.TONE_DTMF_A;
+                break;
+            case 'f':
+                toneTypes = ToneGenerator.TONE_DTMF_B;
+                break;
+            case 'g':
+                toneTypes = ToneGenerator.TONE_DTMF_1;
+                break;
+            case 'a':
+                toneTypes = ToneGenerator.TONE_DTMF_2;
+                break;
+            case 'b':
+                toneTypes = ToneGenerator.TONE_DTMF_5;
+                break;
+            case 'C':
+                toneTypes = ToneGenerator.TONE_DTMF_6;
+                break;
+        }
+        if (toneTypes!=0) {
+            try{
+                toneGenerator.startTone(toneTypes, durationMs);
+            }catch(Exception e){}
+        }
+
+        //toneGenerator.release();
     }
 
     @Override

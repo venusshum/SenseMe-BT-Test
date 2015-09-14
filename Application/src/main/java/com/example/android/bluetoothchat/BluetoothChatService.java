@@ -21,6 +21,9 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -30,6 +33,7 @@ import com.example.android.common.logger.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -65,6 +69,11 @@ public class BluetoothChatService {
     private ConnectedThread mConnectedThread;
     private int mState;
 
+    /* multi */
+    private ArrayList<String> mDeviceAddresses;
+    private ArrayList<ConnectedThread> mConnThreads;
+    private ArrayList<BluetoothSocket> mSockets;
+
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
     public static final int STATE_LISTEN = 1;     // now listening for incoming connections
@@ -81,6 +90,9 @@ public class BluetoothChatService {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
+        mDeviceAddresses = new ArrayList<String>();
+        mConnThreads = new ArrayList<ConnectedThread>();
+        mSockets = new ArrayList<BluetoothSocket>();
     }
 
     /**
@@ -145,23 +157,28 @@ public class BluetoothChatService {
         Log.d(TAG, "connect to: " + device);
 
         // Cancel any thread attempting to make a connection
+
         if (mState == STATE_CONNECTING) {
             if (mConnectThread != null) {
-                mConnectThread.cancel();
+                /*multi*/
+                //mConnectThread.cancel();
                 mConnectThread = null;
             }
         }
 
         // Cancel any thread currently running a connection
         if (mConnectedThread != null) {
-            mConnectedThread.cancel();
+            /*multi*/
+            //mConnectedThread.cancel();
             mConnectedThread = null;
         }
 
         // Start the thread to connect with the given device
+
         mConnectThread = new ConnectThread(device, secure);
         mConnectThread.start();
         setState(STATE_CONNECTING);
+
     }
 
     /**
@@ -175,6 +192,8 @@ public class BluetoothChatService {
         Log.d(TAG, "connected, Socket Type:" + socketType);
 
         // Cancel the thread that completed the connection
+        /*multi*/
+        /*
         if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
@@ -195,10 +214,13 @@ public class BluetoothChatService {
             mInsecureAcceptThread.cancel();
             mInsecureAcceptThread = null;
         }
-
+        */
         // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = new ConnectedThread(socket, socketType);
+        mConnectedThread = new ConnectedThread(socket, socketType, device.getName());
         mConnectedThread.start();
+        /*multi*/
+        mConnThreads.add(mConnectedThread);
+
 
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME);
@@ -207,6 +229,7 @@ public class BluetoothChatService {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
+        /*multi*/
         setState(STATE_CONNECTED);
     }
 
@@ -246,6 +269,7 @@ public class BluetoothChatService {
      */
     public void write(byte[] out) {
         // Create temporary object
+        /* Single
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
@@ -254,6 +278,22 @@ public class BluetoothChatService {
         }
         // Perform the write unsynchronized
         r.write(out);
+        */
+        // When writing, try to write out to all connected threads
+        for (int i = 0; i < mConnThreads.size(); i++) {
+            try {
+                // Create temporary object
+                ConnectedThread r;
+                // Synchronize a copy of the ConnectedThread
+                synchronized (this) {
+                    if (mState != STATE_CONNECTED) return;
+                    r = mConnThreads.get(i);
+                }
+                // Perform the write unsynchronized
+                r.write(out);
+            } catch (Exception e) {
+            }
+        }
     }
 
     /**
@@ -297,6 +337,7 @@ public class BluetoothChatService {
         private String mSocketType;
 
         public AcceptThread(boolean secure) {
+
             BluetoothServerSocket tmp = null;
             mSocketType = secure ? "Secure" : "Insecure";
 
@@ -313,6 +354,7 @@ public class BluetoothChatService {
                 Log.e(TAG, "Socket Type: " + mSocketType + "listen() failed", e);
             }
             mmServerSocket = tmp;
+
         }
 
         public void run() {
@@ -339,6 +381,11 @@ public class BluetoothChatService {
                         switch (mState) {
                             case STATE_LISTEN:
                             case STATE_CONNECTING:
+                                /* multiple */
+                                String address = socket.getRemoteDevice().getAddress();
+                                mSockets.add(socket);
+                                mDeviceAddresses.add(address);
+
                                 // Situation normal. Start the connected thread.
                                 connected(socket, socket.getRemoteDevice(),
                                         mSocketType);
@@ -346,11 +393,14 @@ public class BluetoothChatService {
                             case STATE_NONE:
                             case STATE_CONNECTED:
                                 // Either not ready or already connected. Terminate new socket.
+                                /* multi
                                 try {
                                     socket.close();
+
                                 } catch (IOException e) {
                                     Log.e(TAG, "Could not close unwanted socket", e);
                                 }
+                                */
                                 break;
                         }
                     }
@@ -380,6 +430,7 @@ public class BluetoothChatService {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
         private String mSocketType;
+
 
         public ConnectThread(BluetoothDevice device, boolean secure) {
             mmDevice = device;
@@ -454,8 +505,10 @@ public class BluetoothChatService {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        private String deviceName;
+        // audioTrack;
 
-        public ConnectedThread(BluetoothSocket socket, String socketType) {
+        public ConnectedThread(BluetoothSocket socket, String socketType, String name) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
             mmSocket = socket;
             InputStream tmpIn = null;
@@ -464,6 +517,9 @@ public class BluetoothChatService {
             // Get the BluetoothSocket input and output streams
             try {
                 tmpIn = socket.getInputStream();
+                byte[] tmpbuffer = new byte[1024];
+                tmpIn.read(tmpbuffer);
+
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) {
                 Log.e(TAG, "temp sockets not created", e);
@@ -471,22 +527,46 @@ public class BluetoothChatService {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            deviceName = name;
+
+
+
+
+
+
         }
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];
-            int bytes;
-
+            int bytes = 0;
+            byte ch;
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
                     // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
+                    bytes = 0;
+                    while ((ch = (byte) mmInStream.read())!='\n') {
+                        bytes++;
+                        buffer[bytes-1]=ch;
+                    }
+                    //bytes = mmInStream.read(buffer);
+
+                    // Send the name of the connected device back to the UI Activity
+                    Message msg = mHandler.obtainMessage(Constants.MESSAGE_CHANGE_DEVICE_NAME);
+                    Bundle bundle = new Bundle();
+                    bundle.putString(Constants.DEVICE_NAME, deviceName);
+                    msg.setData(bundle);
+                    mHandler.sendMessage(msg);
 
                     // Send the obtained bytes to the UI Activity
                     mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
+
+                    //playTone((char) buffer[0]);
+                    //playSound();
+                    AudioPlayManager APM = new AudioPlayManager((char) buffer[0]);
+                    APM.play();
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
@@ -505,7 +585,6 @@ public class BluetoothChatService {
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
-
                 // Share the sent message back to the UI Activity
                 mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
@@ -521,5 +600,143 @@ public class BluetoothChatService {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
         }
+
+
+
+        /* Play sounds */
+        //private final int duration = 1; // seconds
+        //private final int sampleRate = 8000;
+        //private final int numSamples = duration * sampleRate;
+
+
+
+
+
+
+
+    }
+}
+
+class AudioPlayManager {
+
+   private volatile boolean playing;
+
+    private final double sample[] = new double[2000];   //numSamples
+    //private final double freqOfTone = 440; // hz
+    private final byte generatedSnd[] = new byte[4000];  //2 * numSamples
+    char playtone;
+    private final int sampleRate = 8000;
+
+    public AudioPlayManager(char thisTone) {
+        super();
+        setPlaying(false);
+        playtone = thisTone;
+        genTonefromChar();
+    }
+    public void play() {
+
+        //final Context context = aContext;
+
+    new Thread() {
+
+        @Override
+        public void run() {
+
+            try {
+                // Close the input streams.
+
+                // Create a new AudioTrack object using the same parameters as the AudioRecord
+                // object used to create the file.
+                final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                        sampleRate,
+                        AudioFormat.CHANNEL_OUT_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        generatedSnd.length,
+                        AudioTrack.MODE_STATIC);
+                // Start playback
+                audioTrack.write(generatedSnd, 0, generatedSnd.length);
+                audioTrack.play();
+
+                // Write the music buffer to the AudioTrack object
+                //while(playing){
+                //    audioTrack.write(generatedSnd, 0, generatedSnd.length);
+                //}
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }.start();
+    }
+
+    void genTonefromChar(){
+        switch (playtone) {
+            case 'c':
+                genTone(261.30);
+                break;
+            case 'd':
+                genTone(293.66);
+                break;
+            case 'e':
+                genTone(329.63);
+                break;
+            case 'f':
+                genTone(349.23);
+                break;
+            case 'g':
+                genTone(392.00);
+                break;
+            case 'a':
+                genTone(440);
+                break;
+            case 'b':
+                genTone(493.88);
+                break;
+            case 'C':
+                genTone(523.25);
+                break;
+        }
+    }
+
+    void genTone(double tmpTone){
+        // fill out the array
+        for (int i = 0; i < 2000; ++i) {
+            sample[i] = Math.sin(2 * Math.PI * i / (4000/tmpTone));
+        }
+
+        // convert to 16 bit pcm sound array
+        // assumes the sample buffer is normalised.
+        int idx = 0;
+        for (double dVal : sample) {
+            // scale to maximum amplitude
+            short val = (short) ((dVal * 32767));
+            // in 16 bit wav PCM, first byte is the low order byte
+            generatedSnd[idx++] = (byte) (val & 0x00ff);
+            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
+
+        }
+    }
+/*
+    void playSound(){
+        int sampleRate = 8000;
+        try {
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                    sampleRate, AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
+                    AudioTrack.MODE_STREAM);
+
+            audioTrack.write(generatedSnd, 0, generatedSnd.length);
+            audioTrack.play();
+        }
+        catch (Exception e){}
+    }
+*/
+    public void setPlaying(boolean playing) {
+        this.playing = playing;
+    }
+
+    public boolean isPlaying() {
+        return playing;
     }
 }
