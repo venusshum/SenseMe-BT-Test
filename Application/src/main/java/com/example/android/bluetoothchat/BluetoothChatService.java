@@ -21,9 +21,13 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -80,6 +84,7 @@ public class BluetoothChatService {
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
+    private Context mcontext;
     /**
      * Constructor. Prepares a new BluetoothChat session.
      *
@@ -93,6 +98,7 @@ public class BluetoothChatService {
         mDeviceAddresses = new ArrayList<String>();
         mConnThreads = new ArrayList<ConnectedThread>();
         mSockets = new ArrayList<BluetoothSocket>();
+        mcontext = context;
     }
 
     /**
@@ -451,6 +457,7 @@ public class BluetoothChatService {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
             mmSocket = tmp;
+
         }
 
         public void run() {
@@ -507,6 +514,10 @@ public class BluetoothChatService {
         private final OutputStream mmOutStream;
         private String deviceName;
         // audioTrack;
+        boolean loaded = false;
+        int soundID;
+        SoundPool soundPool;
+        boolean plays = false;
 
         public ConnectedThread(BluetoothSocket socket, String socketType, String name) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
@@ -563,10 +574,11 @@ public class BluetoothChatService {
                     mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
 
-                    //playTone((char) buffer[0]);
-                    //playSound();
-                    AudioPlayManager APM = new AudioPlayManager((char) buffer[0]);
-                    APM.play();
+
+                    //AudioPlayManager APM = new AudioPlayManager((char) buffer[0]);
+                    //APM.play();
+                    playNote((char) buffer[0]);
+
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
@@ -603,12 +615,62 @@ public class BluetoothChatService {
 
 
 
+
         /* Play sounds */
-        //private final int duration = 1; // seconds
-        //private final int sampleRate = 8000;
-        //private final int numSamples = duration * sampleRate;
+        /* ref http://examples.javacodegeeks.com/android/android-soundpool-example/ */
+
+        private void playNote(char playtone){
+            soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+            plays = false;
+            soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+                @Override
+                public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                    loaded = true;
+                }
+            });
 
 
+            switch (playtone) {
+                case 'c':
+                    soundID = soundPool.load(mcontext, R.raw.piano_c, 1);
+                    break;
+                case 'd':
+                    soundID = soundPool.load(mcontext, R.raw.piano_d, 1);
+                    break;
+                case 'e':
+                    soundID = soundPool.load(mcontext, R.raw.piano__e, 1);
+                    break;
+                case 'f':
+                    soundID = soundPool.load(mcontext, R.raw.piano__f, 1);
+                    break;
+                case 'g':
+                    soundID = soundPool.load(mcontext, R.raw.piano__g, 1);
+                    break;
+                case 'a':
+                    soundID = soundPool.load(mcontext, R.raw.piano__a, 1);
+                    break;
+                case 'b':
+                    soundID = soundPool.load(mcontext, R.raw.piano__b, 1);
+                    break;
+                case 'C':
+                    soundID = soundPool.load(mcontext, R.raw.piano_c5, 1);
+                    break;
+            }
+
+            int volume = 1;
+            int counter= 0;
+            if (loaded && !plays) {
+                soundPool.play(soundID, volume, volume, 1, 0, 1f);
+                counter = counter++;
+                //Toast.makeText(this, "Played sound", Toast.LENGTH_SHORT).show();
+                plays = true;
+            }
+            try {
+                Thread.sleep(500);
+                soundPool.release();
+            }catch (InterruptedException e) {e.printStackTrace();}
+
+        }
 
 
 
@@ -617,6 +679,7 @@ public class BluetoothChatService {
     }
 }
 
+/* Class AudioPlayManager using AudioTrack*/
 class AudioPlayManager {
 
    private volatile boolean playing;
@@ -740,3 +803,5 @@ class AudioPlayManager {
         return playing;
     }
 }
+
+
