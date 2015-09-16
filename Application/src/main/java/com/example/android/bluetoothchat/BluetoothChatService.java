@@ -85,6 +85,7 @@ public class BluetoothChatService {
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
     private Context mcontext;
+
     /**
      * Constructor. Prepares a new BluetoothChat session.
      *
@@ -436,7 +437,7 @@ public class BluetoothChatService {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
         private String mSocketType;
-
+        SoundPoolManager spm = new SoundPoolManager();
 
         public ConnectThread(BluetoothDevice device, boolean secure) {
             mmDevice = device;
@@ -513,11 +514,12 @@ public class BluetoothChatService {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
         private String deviceName;
+        SoundPoolManager spm;
         // audioTrack;
-        boolean loaded = false;
-        int soundID;
-        SoundPool soundPool;
-        boolean plays = false;
+        //boolean loaded = false;
+        //int soundID;
+        //SoundPool soundPool;
+        //boolean plays = false;
 
         public ConnectedThread(BluetoothSocket socket, String socketType, String name) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
@@ -540,9 +542,9 @@ public class BluetoothChatService {
             mmOutStream = tmpOut;
             deviceName = name;
 
-
-
-
+            try {
+                initSoundPoolManager();
+            } catch (Exception e){e.printStackTrace();}
 
 
         }
@@ -557,9 +559,9 @@ public class BluetoothChatService {
                 try {
                     // Read from the InputStream
                     bytes = 0;
-                    while ((ch = (byte) mmInStream.read())!='\n') {
+                    while ((ch = (byte) mmInStream.read()) != '\n') {
                         bytes++;
-                        buffer[bytes-1]=ch;
+                        buffer[bytes - 1] = ch;
                     }
                     //bytes = mmInStream.read(buffer);
 
@@ -577,7 +579,12 @@ public class BluetoothChatService {
 
                     //AudioPlayManager APM = new AudioPlayManager((char) buffer[0]);
                     //APM.play();
-                    playNote((char) buffer[0]);
+
+                    /* SoundPool using a method defined below within the same class */
+                    //playNote((char) buffer[0]);
+
+                    /* Use SoundPoolManager class*/
+                    playSound((char) buffer[0]);
 
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
@@ -614,11 +621,78 @@ public class BluetoothChatService {
         }
 
 
+        /* SoundPoolManager functions */
+
+        private void initSoundPoolManager() {
+            spm = new SoundPoolManager();
+            spm.initSounds(mcontext);
+            /* piano */
+            spm.addSound(0, R.raw.piano_c);
+            spm.addSound(1, R.raw.piano_d);
+            spm.addSound(2, R.raw.piano__e);
+            spm.addSound(3, R.raw.piano__f);
+            spm.addSound(4, R.raw.piano__g);
+            spm.addSound(5, R.raw.piano__a);
+            spm.addSound(6, R.raw.piano__b);
+            spm.addSound(7, R.raw.piano_c5);
+            /* drums */
+            spm.addSound(8, R.raw.drum_bada);
+            spm.addSound(9, R.raw.drum_kick);
+            spm.addSound(10, R.raw.drum_snare);
+            spm.addSound(1, R.raw.drum_steel6);
+        }
+
+        private void playSound(char c) {
+            //spm = new SoundPoolManager();
+            if (spm != null){
+                switch (c) {
+                    case 'c':
+                        spm.playSound(0);
+                        break;
+                    case 'd':
+                        spm.playSound(1);
+                        break;
+                    case 'e':
+                        spm.playSound(2);
+                        break;
+                    case 'f':
+                        spm.playSound(3);
+                        break;
+                    case 'g':
+                        spm.playSound(4);
+                        break;
+                    case 'a':
+                        spm.playSound(5);
+                        break;
+                    case 'b':
+                        spm.playSound(6);
+                        break;
+                    case 'C':
+                        spm.playSound(7);
+                        break;
+                    /* drums */
+                    case 'w':
+                        spm.playSound(8);
+                        break;
+                    case 'x':
+                        spm.playSound(9);
+                        break;
+                    case 'y':
+                        spm.playSound(10);
+                        break;
+                    case 'z':
+                        spm.playSound(11);
+                        break;
+                }
+            }
+        }
+    }
+}
 
 
         /* Play sounds */
         /* ref http://examples.javacodegeeks.com/android/android-soundpool-example/ */
-
+/*
         private void playNote(char playtone){
             soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
             plays = false;
@@ -672,136 +746,13 @@ public class BluetoothChatService {
 
         }
 
-
-
-
-
-    }
-}
-
-/* Class AudioPlayManager using AudioTrack*/
-class AudioPlayManager {
-
-   private volatile boolean playing;
-
-    private final double sample[] = new double[2000];   //numSamples
-    //private final double freqOfTone = 440; // hz
-    private final byte generatedSnd[] = new byte[4000];  //2 * numSamples
-    char playtone;
-    private final int sampleRate = 8000;
-
-    public AudioPlayManager(char thisTone) {
-        super();
-        setPlaying(false);
-        playtone = thisTone;
-        genTonefromChar();
-    }
-    public void play() {
-
-        //final Context context = aContext;
-
-    new Thread() {
-
-        @Override
-        public void run() {
-
-            try {
-                // Close the input streams.
-
-                // Create a new AudioTrack object using the same parameters as the AudioRecord
-                // object used to create the file.
-                final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                        sampleRate,
-                        AudioFormat.CHANNEL_OUT_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT,
-                        generatedSnd.length,
-                        AudioTrack.MODE_STATIC);
-                // Start playback
-                audioTrack.write(generatedSnd, 0, generatedSnd.length);
-                audioTrack.play();
-
-                // Write the music buffer to the AudioTrack object
-                //while(playing){
-                //    audioTrack.write(generatedSnd, 0, generatedSnd.length);
-                //}
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-    }.start();
-    }
-
-    void genTonefromChar(){
-        switch (playtone) {
-            case 'c':
-                genTone(261.30);
-                break;
-            case 'd':
-                genTone(293.66);
-                break;
-            case 'e':
-                genTone(329.63);
-                break;
-            case 'f':
-                genTone(349.23);
-                break;
-            case 'g':
-                genTone(392.00);
-                break;
-            case 'a':
-                genTone(440);
-                break;
-            case 'b':
-                genTone(493.88);
-                break;
-            case 'C':
-                genTone(523.25);
-                break;
-        }
-    }
-
-    void genTone(double tmpTone){
-        // fill out the array
-        for (int i = 0; i < 2000; ++i) {
-            sample[i] = Math.sin(2 * Math.PI * i / (4000/tmpTone));
-        }
-
-        // convert to 16 bit pcm sound array
-        // assumes the sample buffer is normalised.
-        int idx = 0;
-        for (double dVal : sample) {
-            // scale to maximum amplitude
-            short val = (short) ((dVal * 32767));
-            // in 16 bit wav PCM, first byte is the low order byte
-            generatedSnd[idx++] = (byte) (val & 0x00ff);
-            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
-
-        }
-    }
-/*
-    void playSound(){
-        int sampleRate = 8000;
-        try {
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                    sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
-                    AudioTrack.MODE_STREAM);
-
-            audioTrack.write(generatedSnd, 0, generatedSnd.length);
-            audioTrack.play();
-        }
-        catch (Exception e){}
     }
 */
-    public void setPlaying(boolean playing) {
-        this.playing = playing;
-    }
 
-    public boolean isPlaying() {
-        return playing;
-    }
-}
+
+
+
+
+
 
 
