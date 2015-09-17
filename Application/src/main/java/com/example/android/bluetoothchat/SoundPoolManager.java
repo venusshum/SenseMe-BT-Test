@@ -32,22 +32,6 @@ public class SoundPoolManager {
         public void initSounds(Context theContext) {
                 mContext = theContext;
                 mSoundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-                /*
-                if((android.os.Build.VERSION.SDK_INT) == 21){
-
-                        sp21 = new SoundPool.Builder();
-                        sp21.setMaxStreams(10);
-                        sp21.setAudioAttributes(new AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_MEDIA)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                .build());
-                        mSoundPool = sp21.build();
-
-                }
-                else{
-                        mSoundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-                }
-                */
 
                 mSoundPoolMap = new HashMap<Integer, Integer>();
                 mAudioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
@@ -58,16 +42,6 @@ public class SoundPoolManager {
                                 sploaded = true;
                         }
                 });
-                /*
-                soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-                plays = false;
-                soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-                        @Override
-                        public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                                loaded = true;
-                        }
-                });
-                */
 
         }
 

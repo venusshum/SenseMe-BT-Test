@@ -26,28 +26,20 @@
     <dimen name="vertical_page_margin">@dimen/margin_medium</dimen>
     <!-- From: file:/E:/Development/AndroidStudioProjects/BluetoothChat/Application/src/main/res/values/base-strings.xml -->
     <eat-comment/>
-    <string name="app_name">BluetoothChat</string>
+    <string name="app_name">SenseMe Orchestra</string>
     <!-- From: file:/E:/Development/AndroidStudioProjects/BluetoothChat/Application/src/main/res/values/strings.xml -->
     <eat-comment/>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Bluetooth Chat.</string>
     <string name="button_scan">Scan for devices</string>
-    <string name="discoverable">Make discoverable</string>
     <string name="insecure_connect">Connect a device - Insecure</string>
     <!-- From: file:/E:/Development/AndroidStudioProjects/BluetoothChat/Application/src/main/res/values/base-strings.xml -->
     <eat-comment/>
     <string name="intro_message">
         <![CDATA[
-        
-            
-            This application allows two Android devices to carry out two-way text chat over
-            Bluetooth. It demonstrates all the fundamental Bluetooth API capabilites, such as:
-              (1) Scanning for other Bluetooth devices
-              (2) Querying the local Bluetooth adapter for paired Bluetooth devices
-              (3) Establishing RFCOMM channels/sockets
-              (4) Connecting to a remote device
-              (5) Transfering data over Bluetooth
-            
-        
+            Connect to multiple SenseMe cubes via Bluetooth (not BLE). The app receives messages from the SenseMe cubes. Depending on the message, it will produce the right note for that instrument.
+            1. Click on the "Bluetooth" icon on the top right to get a list of device, press "scan for devices" to discover more.
+            2. Click on the name of the SenseMe cube to make a connection.
+            3. Tilt the SenseMe cube to start transmitting characters to the phone.
         ]]>
     </string>
     <!-- From: file:/E:/Development/AndroidStudioProjects/BluetoothChat/Application/src/main/res/values/strings.xml -->

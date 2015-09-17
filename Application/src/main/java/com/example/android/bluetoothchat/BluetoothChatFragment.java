@@ -48,6 +48,8 @@ import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
 
+import java.util.Set;
+
 /**
  * This fragment controls Bluetooth to communicate with other devices.
  */
@@ -122,6 +124,8 @@ public class BluetoothChatFragment extends Fragment {
         } else if (mChatService == null) {
             setupChat();
         }
+
+        connectPairedDevice();
     }
 
     @Override
@@ -394,46 +398,17 @@ public class BluetoothChatFragment extends Fragment {
         mChatService.connect(device, secure);
     }
 
-    private void playSound(char tmptone){
-        int streamType = AudioManager.STREAM_MUSIC;
-        int volume = 50;
-        int durationMs = 200;
-        int toneTypes=0;
-        ToneGenerator toneGenerator =
-                new ToneGenerator(streamType, volume);
-        switch (tmptone) {
-            case 'c':
-                toneTypes = ToneGenerator.TONE_DTMF_C;
-                break;
-            case 'd':
-                toneTypes = ToneGenerator.TONE_DTMF_D;
-                break;
-            case 'e':
-                toneTypes = ToneGenerator.TONE_DTMF_A;
-                break;
-            case 'f':
-                toneTypes = ToneGenerator.TONE_DTMF_B;
-                break;
-            case 'g':
-                toneTypes = ToneGenerator.TONE_DTMF_1;
-                break;
-            case 'a':
-                toneTypes = ToneGenerator.TONE_DTMF_2;
-                break;
-            case 'b':
-                toneTypes = ToneGenerator.TONE_DTMF_5;
-                break;
-            case 'C':
-                toneTypes = ToneGenerator.TONE_DTMF_6;
-                break;
-        }
-        if (toneTypes!=0) {
-            try{
-                toneGenerator.startTone(toneTypes, durationMs);
-            }catch(Exception e){}
+    /* Try to connect the device that are already paired. */
+    private void connectPairedDevice(){
+        // Get a set of currently paired devices
+        if (mBluetoothAdapter.isEnabled()) {
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+            // try to connect the already paired devices
+            for (BluetoothDevice device : pairedDevices) {
+                mChatService.connect(device, false);    //insecure connection
+            }
         }
 
-        //toneGenerator.release();
     }
 
     @Override
@@ -456,11 +431,7 @@ public class BluetoothChatFragment extends Fragment {
                 startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
                 return true;
             }
-            case R.id.discoverable: {
-                // Ensure this device is discoverable by others
-                ensureDiscoverable();
-                return true;
-            }
+
         }
         return false;
     }
