@@ -324,14 +324,26 @@ containing a value of this type.
         public static final int drum_kick=0x7f040001;
         public static final int drum_snare=0x7f040002;
         public static final int drum_steel6=0x7f040003;
-        public static final int piano__a=0x7f040004;
-        public static final int piano__b=0x7f040005;
-        public static final int piano__e=0x7f040006;
-        public static final int piano__f=0x7f040007;
-        public static final int piano__g=0x7f040008;
-        public static final int piano_c=0x7f040009;
-        public static final int piano_c5=0x7f04000a;
-        public static final int piano_d=0x7f04000b;
+        public static final int piano_a3=0x7f040004;
+        public static final int piano_a4=0x7f040005;
+        public static final int piano_b3=0x7f040006;
+        public static final int piano_b4=0x7f040007;
+        public static final int piano_c4=0x7f040008;
+        public static final int piano_c5=0x7f040009;
+        public static final int piano_d4=0x7f04000a;
+        public static final int piano_e4=0x7f04000b;
+        public static final int piano_f4=0x7f04000c;
+        public static final int piano_g4=0x7f04000d;
+        public static final int triangle1=0x7f04000e;
+        public static final int triangle2=0x7f04000f;
+        public static final int xylophone_a=0x7f040010;
+        public static final int xylophone_b=0x7f040011;
+        public static final int xylophone_c=0x7f040012;
+        public static final int xylophone_c2=0x7f040013;
+        public static final int xylophone_d=0x7f040014;
+        public static final int xylophone_e=0x7f040015;
+        public static final int xylophone_f=0x7f040016;
+        public static final int xylophone_g=0x7f040017;
     }
     public static final class string {
         public static final int app_name=0x7f080000;

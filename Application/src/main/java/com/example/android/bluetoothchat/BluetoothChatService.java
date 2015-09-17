@@ -627,6 +627,7 @@ public class BluetoothChatService {
             spm = new SoundPoolManager();
             spm.initSounds(mcontext);
             /* piano */
+            /*
             spm.addSound(0, R.raw.piano_c);
             spm.addSound(1, R.raw.piano_d);
             spm.addSound(2, R.raw.piano__e);
@@ -635,11 +636,30 @@ public class BluetoothChatService {
             spm.addSound(5, R.raw.piano__a);
             spm.addSound(6, R.raw.piano__b);
             spm.addSound(7, R.raw.piano_c5);
+            */
+            spm.addSound(0, R.raw.piano_c4);
+            spm.addSound(1, R.raw.piano_d4);
+            spm.addSound(2, R.raw.piano_e4);
+            spm.addSound(3, R.raw.piano_f4);
+            spm.addSound(4, R.raw.piano_g4);
+            spm.addSound(5, R.raw.piano_a4);
+            spm.addSound(6, R.raw.piano_b4);
+            spm.addSound(7, R.raw.piano_c5);
+
             /* drums */
             spm.addSound(8, R.raw.drum_bada);
             spm.addSound(9, R.raw.drum_kick);
             spm.addSound(10, R.raw.drum_snare);
-            spm.addSound(1, R.raw.drum_steel6);
+            spm.addSound(11, R.raw.drum_steel6);
+            /*xylophone */
+            spm.addSound(12, R.raw.xylophone_c);
+            spm.addSound(13, R.raw.xylophone_d);
+            spm.addSound(14, R.raw.xylophone_e);
+            spm.addSound(15, R.raw.xylophone_f);
+            spm.addSound(16, R.raw.xylophone_g);
+            spm.addSound(17, R.raw.xylophone_a);
+            spm.addSound(18, R.raw.xylophone_b);
+            spm.addSound(19, R.raw.xylophone_c2);
         }
 
         private void playSound(char c) {
@@ -682,6 +702,31 @@ public class BluetoothChatService {
                         break;
                     case 'z':
                         spm.playSound(11);
+                        break;
+                    /*xylophone*/
+                    case '1':
+                        spm.playSound(12);
+                        break;
+                    case '2':
+                        spm.playSound(13);
+                        break;
+                    case '3':
+                        spm.playSound(14);
+                        break;
+                    case '4':
+                        spm.playSound(15);
+                        break;
+                    case '5':
+                        spm.playSound(16);
+                        break;
+                    case '6':
+                        spm.playSound(17);
+                        break;
+                    case '7':
+                        spm.playSound(18);
+                        break;
+                    case '8':
+                        spm.playSound(19);
                         break;
                 }
             }
