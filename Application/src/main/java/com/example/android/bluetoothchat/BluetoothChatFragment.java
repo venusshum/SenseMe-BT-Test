@@ -262,11 +262,13 @@ public class BluetoothChatFragment extends Fragment {
         if (null == activity) {
             return;
         }
-        final ActionBar actionBar = activity.getActionBar();
-        if (null == actionBar) {
-            return;
+        if (android.os.Build.VERSION.SDK_INT>=11) {
+            final ActionBar actionBar = activity.getActionBar();
+            if (null == actionBar) {
+                return;
+            }
+            actionBar.setSubtitle(resId);
         }
-        actionBar.setSubtitle(resId);
     }
 
     /**
@@ -279,11 +281,13 @@ public class BluetoothChatFragment extends Fragment {
         if (null == activity) {
             return;
         }
-        final ActionBar actionBar = activity.getActionBar();
-        if (null == actionBar) {
-            return;
+        if (android.os.Build.VERSION.SDK_INT>=11) {
+            final ActionBar actionBar = activity.getActionBar();
+            if (null == actionBar) {
+                return;
+            }
+            actionBar.setSubtitle(subTitle);
         }
-        actionBar.setSubtitle(subTitle);
     }
 
     /**
