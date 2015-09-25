@@ -6,10 +6,9 @@
 
 # Ignore these files and folder
 build/
-build/*
 screenshots/
-screenshots/*
 *.bin
 *.apk
-*.dek
+*.dex
 *.lock
+*.class
