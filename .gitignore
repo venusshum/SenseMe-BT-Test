@@ -1,0 +1,15 @@
+# Ignore everything:
+#*
+
+# Except for the SenseMe related directories:
+#!examples/
+
+# Ignore these files and folder
+build/
+build/*
+screenshots/
+screenshots/*
+*.bin
+*.apk
+*.dek
+*.lock
