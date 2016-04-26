@@ -396,6 +396,7 @@ public class BluetoothChatService {
                                 // Situation normal. Start the connected thread.
                                 connected(socket, socket.getRemoteDevice(),
                                         mSocketType);
+
                                 break;
                             case STATE_NONE:
                             case STATE_CONNECTED:
@@ -531,7 +532,8 @@ public class BluetoothChatService {
             try {
                 tmpIn = socket.getInputStream();
                 byte[] tmpbuffer = new byte[1024];
-                tmpIn.read(tmpbuffer);
+                //code hangs here if included, until the first character is read.
+                //tmpIn.read(tmpbuffer);
 
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) {
@@ -552,28 +554,29 @@ public class BluetoothChatService {
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];
-            int bytes = 0;
+            int bytes = 1;
             byte ch;
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
                     // Read from the InputStream
-                    bytes = 0;
+                    //bytes = 0;
+                    /*
                     while ((ch = (byte) mmInStream.read()) != '\n') {
                         bytes++;
                         buffer[bytes - 1] = ch;
                     }
-                    //bytes = mmInStream.read(buffer);
-
+                    */
+                    buffer[0] = (byte) mmInStream.read();
+                    //Log.i(TAG, "receive message: "+buffer);
                     // Send the name of the connected device back to the UI Activity
                     Message msg = mHandler.obtainMessage(Constants.MESSAGE_CHANGE_DEVICE_NAME);
                     Bundle bundle = new Bundle();
                     bundle.putString(Constants.DEVICE_NAME, deviceName);
                     msg.setData(bundle);
                     mHandler.sendMessage(msg);
-
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, 1, -1, buffer)
                             .sendToTarget();
 
 
@@ -615,6 +618,7 @@ public class BluetoothChatService {
         public void cancel() {
             try {
                 mmSocket.close();
+                spm.close();
             } catch (IOException e) {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
@@ -728,6 +732,18 @@ public class BluetoothChatService {
                     case '8':
                         spm.playSound(19);
                         break;
+                    /*
+                    default:    //rebroadcast
+                        Message msg = mHandler.obtainMessage(Constants.MESSAGE_BROADCASTMSG);
+                        Bundle bundle = new Bundle();
+                        String tem = "";
+                        tem=tem+c;
+
+                        bundle.putString(Constants.BRDCAST_MSG, tem);
+                        msg.setData(bundle);
+                        mHandler.sendMessage(msg);
+                        break;
+                    */
                 }
             }
         }

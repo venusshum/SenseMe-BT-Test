@@ -124,8 +124,11 @@ public class BluetoothChatFragment extends Fragment {
         } else if (mChatService == null) {
             setupChat();
         }
-
-        connectPairedDevice();
+        /* automatically connect paired device
+        if (android.os.Build.VERSION.SDK_INT>=11) {
+            connectPairedDevice();
+        }
+        */
     }
 
     @Override
@@ -327,6 +330,7 @@ public class BluetoothChatFragment extends Fragment {
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                    Log.d(TAG, "message received");
                     //playSound((char) readBuf[0]);
 
                     //playTone((char) readBuf[0]);
@@ -350,6 +354,16 @@ public class BluetoothChatFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                     break;
+                /*
+                case Constants.MESSAGE_BROADCASTMSG:
+                    if (null != activity) {
+                        String temStr;
+                        temStr = msg.getData().getString(Constants.BRDCAST_MSG);
+                        temStr = temStr;
+                        sendMessageMulti(temStr);
+                    }
+                    break;
+                */
             }
         }
     };

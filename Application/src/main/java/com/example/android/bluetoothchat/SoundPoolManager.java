@@ -83,4 +83,9 @@ public class SoundPoolManager {
                 }
         }
 
+        public void close() {
+                mSoundPool.release();
+                mSoundPool = null;
+        }
+
 }

@@ -9,10 +9,7 @@
     <string name="app_name">SenseMe Orchestra</string>
     <string name="intro_message">
         <![CDATA[
-            Connect to multiple SenseMe cubes via Bluetooth (not BLE). The app receives messages from the SenseMe cubes. Depending on the message, it will produce the right note for that instrument.
-            1. Click on the "Bluetooth" icon on the top right to get a list of device, press "scan for devices" to discover more.
-            2. Click on the name of the SenseMe cube to make a connection.
-            3. Tilt the SenseMe cube to start transmitting characters to the phone.
+            Connect to multiple SenseMe cubes
         ]]>
     </string>
 </resources>
